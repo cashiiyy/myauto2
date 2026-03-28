@@ -1,16 +1,18 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'home_screen.dart';
+import '../providers/user_provider.dart';
 
-class GetStartedScreen extends StatefulWidget {
+class GetStartedScreen extends ConsumerStatefulWidget {
   const GetStartedScreen({super.key});
 
   @override
-  State<GetStartedScreen> createState() => _GetStartedScreenState();
+  ConsumerState<GetStartedScreen> createState() => _GetStartedScreenState();
 }
 
-class _GetStartedScreenState extends State<GetStartedScreen> {
+class _GetStartedScreenState extends ConsumerState<GetStartedScreen> {
   bool isPassenger = true;
 
   @override
@@ -46,7 +48,7 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Spacer(),
-                  Image.asset('assets/images/auto.jpg', width: 100, height: 100, fit: BoxFit.contain, errorBuilder: (ctx, _, __) => const Text('🛺', style: TextStyle(fontSize: 70))),
+                  Image.asset('assets/images/auto.png', width: 100, height: 100, fit: BoxFit.contain, errorBuilder: (ctx, _, __) => const Text('🛺', style: TextStyle(fontSize: 70))),
                   const SizedBox(height: 16),
                   Text(
                     'Get Started',
@@ -128,6 +130,9 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
   Widget _buildGlassButton(String text) {
     return InkWell(
       onTap: () {
+        ref.read(userProfileProvider.notifier).updateProfileMode(
+          isPassenger ? "Passenger mode" : "Driver mode"
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HomeScreen()),

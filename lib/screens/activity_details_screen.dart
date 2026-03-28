@@ -1,6 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+class TicketClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height);
+    path.lineTo(size.width, size.height);
+    path.lineTo(size.width, 0);
+
+    // Draw little jagged bumps/tear marks on top and bottom edges
+    double punchRadius = 10.0;
+    
+    // Left side middle punch
+    path.addOval(Rect.fromCircle(center: Offset(0, size.height / 2), radius: punchRadius * 1.5));
+    // Right side middle punch
+    path.addOval(Rect.fromCircle(center: Offset(size.width, size.height / 2), radius: punchRadius * 1.5));
+
+    path.fillType = PathFillType.evenOdd;
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
 class ActivityDetailsScreen extends StatelessWidget {
   final String title;
   final String date;
@@ -20,7 +44,7 @@ class ActivityDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFDDDDDD), // Grey background highlights the ticket
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -30,86 +54,104 @@ class ActivityDetailsScreen extends StatelessWidget {
             fontSize: 24,
             fontWeight: FontWeight.bold,
             letterSpacing: -0.5,
+            color: Colors.black,
           ),
         ),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark 
-                    ? Colors.black54 
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.grey.withOpacity(0.2),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: isCancelled ? Colors.red.withOpacity(0.1) : Colors.amber.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(isCancelled ? '❌' : '🛺', style: const TextStyle(fontSize: 40)),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    title,
-                    style: GoogleFonts.fustat(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    date,
-                    style: GoogleFonts.abel(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const Divider(height: 48),
-                  _buildRow('Status', isCancelled ? 'Cancelled' : 'Completed', 
-                    isCancelled ? Colors.red : Colors.green),
-                  const SizedBox(height: 16),
-                  _buildRow('Amount', amount, null),
-                  const SizedBox(height: 16),
-                  _buildRow('Distance', distance, null),
-                  const Divider(height: 48),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('Driver Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        backgroundColor: Colors.grey,
-                        child: Icon(Icons.person, color: Colors.white),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Ramesh Kumar', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-                          Text('KL 01 AB 1234', style: TextStyle(color: Colors.grey[600])),
-                        ],
-                      )
-                    ],
-                  )
-                ],
-              ),
+        padding: const EdgeInsets.all(24.0),
+        child: ClipPath(
+          clipper: TicketClipper(),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+            decoration: const BoxDecoration(
+              color: Colors.white,
             ),
-          ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: isCancelled ? Colors.red.withOpacity(0.1) : Colors.amber.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: isCancelled 
+                      ? const Text('❌', style: TextStyle(fontSize: 40))
+                      : Image.asset('assets/images/rickshaw (1).png', width: 44, height: 44),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: GoogleFonts.fustat(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  date,
+                  style: GoogleFonts.abel(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24.0),
+                  child: Text('------------------------------------', 
+                    style: TextStyle(color: Colors.grey, letterSpacing: 2.0)),
+                ),
+                _buildRow('Status', isCancelled ? 'Cancelled' : 'Completed', 
+                  isCancelled ? Colors.red : Colors.green),
+                const SizedBox(height: 16),
+                _buildRow('Amount', amount, Colors.black),
+                const SizedBox(height: 16),
+                _buildRow('Distance', distance, Colors.black),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24.0),
+                  child: Text('------------------------------------', 
+                    style: TextStyle(color: Colors.grey, letterSpacing: 2.0)),
+                ),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Driver Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const CircleAvatar(
+                      backgroundColor: Colors.grey,
+                      child: Icon(Icons.person, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Ramesh Kumar', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.black)),
+                        Text('KL 01 AB 1234', style: TextStyle(color: Colors.grey[600])),
+                      ],
+                    )
+                  ],
+                ),
+                const SizedBox(height: 32),
+                // Barcode simulation
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(20, (index) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    width: index % 3 == 0 ? 4 : 2,
+                    height: 40,
+                    color: Colors.black,
+                  )),
+                )
+              ],
+            ),
+          ),
         ),
       ),
     );

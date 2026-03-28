@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -11,6 +10,7 @@ import 'edit_profile_screen.dart';
 import 'safety_contacts_screen.dart';
 import 'settings_screen.dart';
 import 'offers_screen.dart';
+import 'get_started_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -74,19 +74,19 @@ class ProfileScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 32),
 
-              _buildMenuCard(context, 'Edit Profile', CupertinoIcons.person_solid, () {
+              _buildMenuCard(context, 'Edit Profile', 'assets/images/Frame 10.png', () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
               }),
-              _buildMenuCard(context, 'Offers & Promos', CupertinoIcons.tag_solid, () {
+              _buildMenuCard(context, 'Offers & Promos', 'assets/images/Tags.png', () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const OffersScreen()));
               }),
-              _buildMenuCard(context, 'Safety Contacts', CupertinoIcons.shield_fill, () {
+              _buildMenuCard(context, 'Safety Contacts', 'assets/images/Contacts.png', () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const SafetyContactsScreen()));
               }),
-              _buildMenuCard(context, 'Settings', CupertinoIcons.settings_solid, () {
+              _buildMenuCard(context, 'Settings', 'assets/images/Settings.png', () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
               }),
-              _buildMenuCard(context, 'Customer support', CupertinoIcons.chat_bubble_2_fill, () {}),
+              _buildMenuCard(context, 'Customer support', 'assets/images/customer-support-icon.jpg', () {}),
               
               const SizedBox(height: 32),
               Center(
@@ -102,7 +102,12 @@ class ProfileScreen extends ConsumerWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(27),
                       onTap: () {
-                        // Implement Sign Out routing later
+                        // Sign out and clear stack
+                        Navigator.pushAndRemoveUntil(
+                          context, 
+                          MaterialPageRoute(builder: (_) => const GetStartedScreen()), 
+                          (route) => false,
+                        );
                       },
                       child: Center(
                         child: Text(
@@ -126,7 +131,7 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMenuCard(BuildContext context, String label, IconData icon, VoidCallback onTap) {
+  Widget _buildMenuCard(BuildContext context, String label, String imagePath, VoidCallback onTap) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Padding(
@@ -147,7 +152,18 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(icon, size: 28),
+                    ColorFiltered(
+                      colorFilter: isDark 
+                          ? const ColorFilter.matrix([
+                              -1, 0, 0, 0, 255, 
+                              0, -1, 0, 0, 255, 
+                              0, 0, -1, 0, 255, 
+                              0, 0, 0, 1, 0]) // simple invert for dark mode
+                          : const ColorFilter.mode(Colors.black, BlendMode.dstIn),
+                      child: Image.asset(imagePath, width: 28, height: 28,
+                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.image, size: 28),
+                      ),
+                    ),
                     const SizedBox(width: 16),
                     Text(
                       label,

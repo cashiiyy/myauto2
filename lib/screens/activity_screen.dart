@@ -126,7 +126,9 @@ class ActivityScreen extends StatelessWidget {
                     color: isCancelled ? Colors.red.withOpacity(0.1) : Colors.amber.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Text(icon, style: const TextStyle(fontSize: 20)),
+                  child: isCancelled 
+                      ? Text(icon, style: const TextStyle(fontSize: 20))
+                      : Image.asset('assets/images/rickshaw (1).png', width: 24, height: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

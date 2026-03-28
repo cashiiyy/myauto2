@@ -48,6 +48,7 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
 
   void updateName(String name) => state = state.copyWith(name: name);
   void updateEmail(String email) => state = state.copyWith(email: email);
+  void updateProfileMode(String mode) => state = state.copyWith(profileMode: mode);
   void addContact(SafetyContact contact) {
     state = state.copyWith(contacts: [...state.contacts, contact]);
   }

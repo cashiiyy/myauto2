@@ -229,7 +229,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             right: 0,
             height: 350,
             child: _selectedAuto != null 
-              ? AutoDetailsSheet(auto: _selectedAuto!, distance: _distanceToAuto)
+              ? AutoDetailsSheet(
+                  auto: _selectedAuto!, 
+                  distance: _distanceToAuto,
+                  onClose: () => setState(() => _selectedAuto = null),
+                )
               : const SizedBox(),
           ),
         ],
@@ -243,7 +247,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16), // Heavy Glass
         child: Container(
-          height: 65,
+          height: 70,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark 
@@ -260,17 +264,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 6),
-              Container(
-                width: 32,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const Expanded(child: SizedBox()),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -279,7 +274,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _buildTabItem(2, 'Profile', Icons.person),
                 ],
               ),
-              const SizedBox(height: 10),
             ],
           ),
         ),
