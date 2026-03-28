@@ -1,0 +1,168 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../providers/user_provider.dart';
+import '../providers/theme_provider.dart';
+
+import 'edit_profile_screen.dart';
+import 'safety_contacts_screen.dart';
+import 'settings_screen.dart';
+import 'offers_screen.dart';
+
+class ProfileScreen extends ConsumerWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userProfile = ref.watch(userProfileProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            children: [
+              // Dark Mode Toggle Top Right
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                  onPressed: () {
+                    ref.read(themeModeProvider.notifier).state = 
+                        isDark ? ThemeMode.light : ThemeMode.dark;
+                  },
+                ),
+              ),
+
+              // Avatar Circle
+              Center(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: const BoxDecoration(
+                        color: Colors.black,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const Icon(Icons.person, color: Colors.white, size: 60),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              Text(
+                userProfile.name,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                userProfile.profileMode,
+                style: GoogleFonts.abel(fontSize: 16, color: Colors.grey[500]),
+              ),
+              const SizedBox(height: 32),
+
+              _buildMenuCard(context, 'Edit Profile', CupertinoIcons.person_solid, () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+              }),
+              _buildMenuCard(context, 'Offers & Promos', CupertinoIcons.tag_solid, () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const OffersScreen()));
+              }),
+              _buildMenuCard(context, 'Safety Contacts', CupertinoIcons.shield_fill, () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const SafetyContactsScreen()));
+              }),
+              _buildMenuCard(context, 'Settings', CupertinoIcons.settings_solid, () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+              }),
+              _buildMenuCard(context, 'Customer support', CupertinoIcons.chat_bubble_2_fill, () {}),
+              
+              const SizedBox(height: 32),
+              Center(
+                child: Container(
+                  width: 200,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF383C), // Red Sign Out
+                    borderRadius: BorderRadius.circular(27),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(27),
+                      onTap: () {
+                        // Implement Sign Out routing later
+                      },
+                      child: Center(
+                        child: Text(
+                          'Sign Out',
+                          style: GoogleFonts.fustat(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 120), // padding for bottom bar
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuCard(BuildContext context, String label, IconData icon, VoidCallback onTap) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Material(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.7),
+            child: InkWell(
+              onTap: onTap,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1.5),
+                ),
+                child: Row(
+                  children: [
+                    Icon(icon, size: 28),
+                    const SizedBox(width: 16),
+                    Text(
+                      label,
+                      style: GoogleFonts.fustat(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
