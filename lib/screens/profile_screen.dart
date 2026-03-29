@@ -53,7 +53,11 @@ class ProfileScreen extends ConsumerWidget {
                         if (user.driverPhotoUrl != null) 
                           ClipOval(child: Image.network(user.driverPhotoUrl!, width: 120, height: 120, fit: BoxFit.cover))
                         else
-                          const Icon(Icons.person, color: Colors.white, size: 60),
+                          ColorFiltered(
+                            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                            child: Image.asset('assets/images/Profile.png', width: 60, height: 60, fit: BoxFit.contain, 
+                               errorBuilder: (ctx, err, constr) => const Icon(Icons.person, color: Colors.white, size: 60)),
+                          ),
                       ],
                     ),
                   ),
@@ -82,7 +86,7 @@ class ProfileScreen extends ConsumerWidget {
               _buildMenuCard(context, 'Settings', 'assets/images/Settings.png', () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
               }),
-              _buildMenuCard(context, 'Customer support', 'assets/images/customer-support-icon.jpg', () {}),
+              _buildMenuCard(context, 'Customer support', 'assets/images/customer-support-icon.png', () {}),
               
               const SizedBox(height: 32),
               Center(
