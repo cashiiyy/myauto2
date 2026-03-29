@@ -1,0 +1,7 @@
+﻿Analyzing MYAUTO2...                                            
+
+   info - The private field _mockLoaded could be 'final' - lib\screens\home_screen.dart:29:8 - prefer_final_fields
+warning - The value of the field '_mockLoaded' isn't used - lib\screens\home_screen.dart:29:8 - unused_field
+   info - Use 'const' for final variables initialized to a constant value - lib\screens\home_screen.dart:281:5 - prefer_const_declarations
+warning - Unused import: 'login_screen.dart' - lib\screens\profile_screen.dart:13:8 - unused_import
+

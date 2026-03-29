@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math';
 import '../models/auto_model.dart';
 

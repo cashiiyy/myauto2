@@ -7,10 +7,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/location_provider.dart';
 import '../providers/auto_provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/auto_model.dart';
 import '../widgets/auto_details_sheet.dart';
 import 'activity_screen.dart';
 import 'profile_screen.dart';
+import '../providers/user_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -26,17 +28,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   AutoModel? _selectedAuto;
   double _distanceToAuto = 0.0;
   
-  bool _mockLoaded = false;
 
-  void _loadMockAutos(Position position) {
-    if (_mockLoaded) return;
-    final autoService = ref.read(autoServiceProvider);
-    final autos = autoService.getMockAutos(position.latitude, position.longitude);
-    Future.microtask(() {
-      ref.read(autoListProvider.notifier).state = autos;
-    });
-    _mockLoaded = true;
-  }
 
   void _selectAuto(AutoModel auto, Position? currentPos) {
     if (currentPos != null) {
@@ -51,7 +43,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _callSos() async {
-    final Uri url = Uri(scheme: 'tel', path: '100');
+    final sosNumber = ref.read(sosContactProvider);
+    final Uri url = Uri(scheme: 'tel', path: sosNumber);
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     }
@@ -98,14 +91,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildMapTab() {
     final locationAsync = ref.watch(currentLocationProvider);
-    final autoList = ref.watch(autoListProvider);
+    final userAsync = ref.watch(currentUserProvider);
+    
+    // Determine which stream to listen to based on current user role
+    final role = userAsync.value?.role ?? 'passenger';
+    final mapMarkersAsync = role == 'passenger' 
+        ? ref.watch(autoListStreamProvider) 
+        : ref.watch(activePassengerListStreamProvider);
 
     return Stack(
       children: [
         locationAsync.when(
           data: (position) {
             if (position == null) return const Center(child: Text('Location Denied.'));
-            _loadMockAutos(position);
             final userLocation = LatLng(position.latitude, position.longitude);
 
             return GestureDetector(
@@ -135,32 +133,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         width: 40, height: 40,
                         child: const Icon(Icons.my_location, color: Colors.blue, size: 30),
                       ),
-                      ...autoList.map((auto) {
-                        final isSelected = _selectedAuto?.id == auto.id;
-                        return Marker(
-                          point: LatLng(auto.latitude, auto.longitude),
-                          width: isSelected ? 60 : 50,
-                          height: isSelected ? 60 : 50,
-                          child: GestureDetector(
-                            onTap: () => _selectAuto(auto, position),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: auto.isAvailable ? Colors.green.withOpacity(0.5) : Colors.red.withOpacity(0.4),
-                                    shape: BoxShape.circle,
-                                    border: isSelected ? Border.all(color: Colors.black, width: 2) : null,
+                      
+                      // Map active targets from corresponding stream
+                      ...mapMarkersAsync.when(
+                        data: (targetList) => targetList.map((target) {
+                          final isSelected = _selectedAuto?.id == target.id;
+                          return Marker(
+                            point: LatLng(target.latitude, target.longitude),
+                            width: isSelected ? 60 : 50,
+                            height: isSelected ? 60 : 50,
+                            child: GestureDetector(
+                              onTap: () => _selectAuto(target, position),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: target.isAvailable ? Colors.green.withValues(alpha: 0.5) : Colors.red.withValues(alpha: 0.4),
+                                      shape: BoxShape.circle,
+                                      border: isSelected ? Border.all(color: Colors.black, width: 2) : null,
+                                    ),
+                                    width: isSelected ? 50 : 40, 
+                                    height: isSelected ? 50 : 40,
                                   ),
-                                  width: isSelected ? 50 : 40, 
-                                  height: isSelected ? 50 : 40,
-                                ),
-                                Text('🛺', style: TextStyle(fontSize: isSelected ? 30 : 24)),
-                              ],
+                                  Text(role == 'passenger' ? '🛺' : '🧍', style: TextStyle(fontSize: isSelected ? 30 : 24)),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      }),
+                          );
+                        }).toList(),
+                        loading: () => [],
+                        error: (_, __) => [],
+                      ),
                     ],
                   ),
                 ],
@@ -177,7 +181,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             right: 20,
             child: FloatingActionButton(
               heroTag: 'refresh',
-              backgroundColor: const Color(0xFFFFDDBA).withOpacity(0.9),
+              backgroundColor: const Color(0xFFFFDDBA).withValues(alpha: 0.9),
               elevation: 4,
               mini: true,
               onPressed: _reloadMap,
@@ -190,7 +194,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             right: 20,
             child: FloatingActionButton(
               heroTag: 'locate',
-              backgroundColor: const Color(0xFFD0E4FF).withOpacity(0.9),
+              backgroundColor: const Color(0xFFD0E4FF).withValues(alpha: 0.9),
               elevation: 4,
               mini: true,
               onPressed: () {
@@ -251,13 +255,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark 
-                ? Colors.black.withOpacity(0.4) 
-                : Colors.white.withOpacity(0.6),
+                ? Colors.black.withValues(alpha: 0.4) 
+                : Colors.white.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -283,7 +287,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildTabItem(int index, String label, IconData icon) {
     bool isSelected = _currentIndex == index;
-    final activeColor = const Color(0xFF007AFF); // Vivid Blue for selected
+    const activeColor = Color(0xFF007AFF); // Vivid Blue for selected
     return GestureDetector(
       onTap: () => setState(() {
         _currentIndex = index;
@@ -294,7 +298,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected 
-             ? (Theme.of(context).brightness == Brightness.dark ? activeColor.withOpacity(0.2) : activeColor.withOpacity(0.1))
+             ? (Theme.of(context).brightness == Brightness.dark ? activeColor.withValues(alpha: 0.2) : activeColor.withValues(alpha: 0.1))
              : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),

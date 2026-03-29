@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../providers/user_provider.dart';
+import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 
 import 'edit_profile_screen.dart';
@@ -17,65 +17,61 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userProfile = ref.watch(userProfileProvider);
+    final userAsync = ref.watch(currentUserProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
-            children: [
-              // Dark Mode Toggle Top Right
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-                  onPressed: () {
-                    ref.read(themeModeProvider.notifier).state = 
-                        isDark ? ThemeMode.light : ThemeMode.dark;
-                  },
-                ),
-              ),
-
-              // Avatar Circle
-              Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: const BoxDecoration(
-                        color: Colors.black,
-                        shape: BoxShape.circle,
-                      ),
+        child: userAsync.when(
+          data: (user) {
+            if (user == null) {
+              return const Center(child: Text('Not logged in'));
+            }
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                      onPressed: () {
+                        ref.read(themeModeProvider.notifier).state = 
+                            isDark ? ThemeMode.light : ThemeMode.dark;
+                      },
                     ),
-                    const Icon(Icons.person, color: Colors.white, size: 60),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              Text(
-                userProfile.name,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                userProfile.profileMode,
-                style: GoogleFonts.abel(fontSize: 16, color: Colors.grey[500]),
-              ),
-              const SizedBox(height: 32),
+                  ),
+                  Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 120, height: 120,
+                          decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+                        ),
+                        if (user.driverPhotoUrl != null) 
+                          ClipOval(child: Image.network(user.driverPhotoUrl!, width: 120, height: 120, fit: BoxFit.cover))
+                        else
+                          const Icon(Icons.person, color: Colors.white, size: 60),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    user.name,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: -0.5),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    user.role == 'driver' ? 'Driver Mode' : 'Passenger Mode',
+                    style: GoogleFonts.abel(fontSize: 16, color: Colors.grey[500]),
+                  ),
+                  const SizedBox(height: 32),
 
               _buildMenuCard(context, 'Edit Profile', 'assets/images/Frame 10.png', () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (_) => EditProfileScreen(user: user)));
               }),
               _buildMenuCard(context, 'Offers & Promos', 'assets/images/Tags.png', () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const OffersScreen()));
@@ -126,9 +122,13 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 120), // padding for bottom bar
             ],
           ),
-        ),
-      ),
-    );
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, st) => Center(child: Text('Error: $e')),
+    ),
+  ),
+);
   }
 
   Widget _buildMenuCard(BuildContext context, String label, String imagePath, VoidCallback onTap) {
@@ -141,14 +141,14 @@ class ProfileScreen extends ConsumerWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Material(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.7),
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.7),
             child: InkWell(
               onTap: onTap,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1.5),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2), width: 1.5),
                 ),
                 child: Row(
                   children: [

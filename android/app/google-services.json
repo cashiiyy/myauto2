@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "252031920183",
+    "project_id": "myauto-493fc",
+    "storage_bucket": "myauto-493fc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:252031920183:android:5409accead9fa6a742b7b2",
+        "android_client_info": {
+          "package_name": "com.myauto.com"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "252031920183-qb88a1c6sagbrhtij9scukijh6nqre6j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByT0Lo7tgsNnoPoEhzjG4e0xeKMIO8e5s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "252031920183-qb88a1c6sagbrhtij9scukijh6nqre6j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

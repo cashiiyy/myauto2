@@ -75,7 +75,7 @@ class ActivityDetailsScreen extends StatelessWidget {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: isCancelled ? Colors.red.withOpacity(0.1) : Colors.amber.withOpacity(0.2),
+                    color: isCancelled ? Colors.red.withValues(alpha: 0.1) : Colors.amber.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Center(

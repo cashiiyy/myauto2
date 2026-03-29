@@ -94,7 +94,7 @@ class ActivityScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? Colors.black54 : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -123,7 +123,7 @@ class ActivityScreen extends StatelessWidget {
                   height: 40,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: isCancelled ? Colors.red.withOpacity(0.1) : Colors.amber.withOpacity(0.2),
+                    color: isCancelled ? Colors.red.withValues(alpha: 0.1) : Colors.amber.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: isCancelled 

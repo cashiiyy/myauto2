@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/user_provider.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool pushNotifications = true;
   bool locationTracking = true;
   bool smsAlerts = false;
@@ -33,6 +35,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSwitchTile('SMS Alerts', 'Receive text messages.', smsAlerts, (val) {
             setState(() => smsAlerts = val);
           }),
+          const Divider(height: 32),
+          
+          // SOS Configuration Tile
+          Consumer(
+            builder: (context, ref, _) {
+              final sosNumber = ref.watch(sosContactProvider);
+              return ListTile(
+                title: const Text('Emergency SOS Contact', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent)),
+                subtitle: Text('Currently set to: $sosNumber'),
+                trailing: const Icon(Icons.edit, size: 20, color: Colors.redAccent),
+                onTap: () => _showSosEditDialog(context, ref, sosNumber),
+              );
+            }
+          ),
+          
           const Divider(height: 32),
           ListTile(
             title: const Text('Language'),
@@ -61,7 +78,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
       subtitle: Text(subtitle),
       value: value,
       onChanged: onChanged,
-      activeColor: Theme.of(context).primaryColor,
+      activeThumbColor: Theme.of(context).primaryColor,
+    );
+  }
+
+  void _showSosEditDialog(BuildContext context, WidgetRef ref, String currentNumber) {
+    final controller = TextEditingController(text: currentNumber);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Set SOS Contact'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.phone,
+          decoration: const InputDecoration(
+            hintText: 'Enter emergency number (e.g. 100)',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newNumber = controller.text.trim();
+              if (newNumber.isNotEmpty) {
+                ref.read(sosContactProvider.notifier).state = newNumber;
+              }
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
     );
   }
 }

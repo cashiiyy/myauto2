@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/user_provider.dart';
+import '../providers/auth_provider.dart';
+import '../models/user_model.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
-  const EditProfileScreen({super.key});
+  final UserModel user;
+  const EditProfileScreen({super.key, required this.user});
 
   @override
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -16,15 +18,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
   String _selectedGender = 'Not Specified';
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    final profile = ref.read(userProfileProvider);
-    _nameController = TextEditingController(text: profile.name);
-    _emailController = TextEditingController(text: profile.email);
-    _phoneController = TextEditingController(text: '+91 9876543210'); // Mock initial
-    _addressController = TextEditingController(text: '123 Main Street, City');
+    _nameController = TextEditingController(text: widget.user.name);
+    _emailController = TextEditingController(text: widget.user.email);
+    _phoneController = TextEditingController(text: widget.user.phone.isNotEmpty ? widget.user.phone : ''); 
+    _addressController = TextEditingController(text: '');
   }
 
   @override
@@ -36,11 +38,33 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
-  void _save() {
-    ref.read(userProfileProvider.notifier).updateName(_nameController.text);
-    ref.read(userProfileProvider.notifier).updateEmail(_emailController.text);
-    // Note: If you want to persist phone/address globally, add them to UserProfile model later.
-    // For now we just save Name and Email globally to reflect on the profile screen.
+  void _save() async {
+    setState(() => _isLoading = true);
+    
+    final updatedUser = UserModel(
+      uid: widget.user.uid,
+      email: _emailController.text.trim(),
+      role: widget.user.role,
+      name: _nameController.text.trim(),
+      phone: _phoneController.text.trim(),
+      createdAt: widget.user.createdAt,
+      isVerified: widget.user.isVerified,
+      autoRegistrationNumber: widget.user.autoRegistrationNumber,
+      licenseNumber: widget.user.licenseNumber,
+      driverPhotoUrl: widget.user.driverPhotoUrl,
+      autoPhotoUrl: widget.user.autoPhotoUrl,
+      latitude: widget.user.latitude,
+      longitude: widget.user.longitude,
+      isAvailable: widget.user.isAvailable,
+    );
+
+    // Update Firestore
+    await ref.read(authControllerProvider.notifier).createUserDocument(updatedUser);
+    
+    // Update local session
+    ref.read(localSessionProvider.notifier).state = updatedUser;
+
+    if (!mounted) return;
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile details updated successfully!'))
@@ -55,10 +79,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          TextButton(
-            onPressed: _save,
-            child: Text('Save', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16)),
-          )
+          _isLoading 
+            ? const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator())))
+            : TextButton(
+                onPressed: _save,
+                child: Text('Save', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16)),
+              )
         ],
       ),
       body: SingleChildScrollView(
@@ -128,7 +154,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedGender,
+              initialValue: _selectedGender,
               decoration: InputDecoration(
                 labelText: 'Gender',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

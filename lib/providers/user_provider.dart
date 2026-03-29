@@ -62,3 +62,6 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
 final userProfileProvider = StateNotifierProvider<UserProfileNotifier, UserProfile>((ref) {
   return UserProfileNotifier();
 });
+
+// Dynamic SOS Contact Provider (defaults to 100)
+final sosContactProvider = StateProvider<String>((ref) => '100');
