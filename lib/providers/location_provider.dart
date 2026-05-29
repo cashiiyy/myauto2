@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/location_service.dart';
 import 'auth_provider.dart';
 
@@ -32,10 +33,10 @@ final currentLocationProvider = StreamProvider<Position?>((ref) async* {
     
     // Background sync to Firestore if user is authenticated
     if (user != null && firestore != null) {
-      firestore.collection('users').doc(user.uid).update({
+      firestore.collection('users').doc(user.uid).set({
         'latitude': position.latitude,
         'longitude': position.longitude,
-      }).catchError((e) {
+      }, SetOptions(merge: true)).catchError((e) {
         // Silently catch errors if the document doesn't exist yet during signup
       });
     }

@@ -57,9 +57,39 @@ final currentUserProvider = StreamProvider<UserModel?>((ref) async* {
   try {
     await for (final doc in firestore.collection('users').doc(authUser.uid).snapshots()) {
       if (doc.exists && doc.data() != null) {
-        yield UserModel.fromMap(doc.data()!, doc.id);
+        final userModel = UserModel.fromMap(doc.data()!, doc.id);
+        if (ref.read(localSessionProvider) == null) {
+          Future.microtask(() {
+            ref.read(localSessionProvider.notifier).state = userModel;
+          });
+        }
+        yield userModel;
       } else {
-        yield localUser;
+        if (localUser != null) {
+          yield localUser;
+        } else {
+          // Document missing in Firestore but user is logged in via Auth.
+          // Create a fallback user model
+          final fallbackUser = UserModel(
+            uid: authUser.uid,
+            email: authUser.email ?? '',
+            role: 'passenger', // default to passenger role
+            name: authUser.displayName ?? (authUser.email != null ? authUser.email!.split('@').first : 'User'),
+            phone: authUser.phoneNumber ?? '',
+            createdAt: DateTime.now(),
+          );
+          
+          // Write it to Firestore asynchronously so it exists next time
+          firestore.collection('users').doc(authUser.uid).set(fallbackUser.toMap()).catchError((e) {
+            print('Failed to create missing user document: $e');
+          });
+          
+          Future.microtask(() {
+            ref.read(localSessionProvider.notifier).state = fallbackUser;
+          });
+          
+          yield fallbackUser;
+        }
       }
     }
   } catch (error) {

@@ -34,17 +34,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       UserModel? user;
       if (fbUser != null) {
         user = await notifier.getUserDocument(fbUser.uid);
+        if (user == null) {
+          user = UserModel(
+            uid: fbUser.uid,
+            email: _emailCtrl.text.trim(),
+            role: 'passenger',
+            name: fbUser.displayName ?? _emailCtrl.text.split('@').first,
+            phone: '',
+            createdAt: DateTime.now(),
+          );
+          await notifier.createUserDocument(user);
+        }
+      } else {
+        // Fallback for Mock Mode
+        user = UserModel(
+          uid: 'email_user',
+          email: _emailCtrl.text.trim(),
+          role: 'passenger',
+          name: _emailCtrl.text.split('@').first,
+          phone: '',
+          createdAt: DateTime.now(),
+        );
       }
-      
-      // Fallback if user document doesn't exist or we are in mock mode
-      user ??= UserModel(
-        uid: fbUser?.uid ?? 'email_user',
-        email: _emailCtrl.text.trim(),
-        role: 'passenger',
-        name: fbUser?.displayName ?? _emailCtrl.text.split('@').first,
-        phone: '',
-        createdAt: DateTime.now(),
-      );
 
       // Save local session
       ref.read(localSessionProvider.notifier).state = user;
